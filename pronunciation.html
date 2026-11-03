@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WordUp - Pronunciation</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:'Poppins',sans-serif;color:#fff;background:#23262d;display:flex;flex-direction:column;align-items:center;padding:20px}
+.top{width:100%;max-width:640px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.logo{font-size:26px;font-weight:800;color:#fff;text-decoration:none}
+.box{width:100%;max-width:640px}
+h2{margin:0 0 16px;font-size:28px}
+textarea,select{font-family:inherit;font-size:18px;padding:12px 14px;border-radius:16px;border:none}
+textarea{width:100%;height:110px;resize:vertical}
+select{background:#fff;color:#4f46e5;font-weight:600;font-size:16px}
+button{font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;padding:10px 20px;border-radius:30px;border:2px solid #fff;background:transparent;color:#fff}
+button.main{background:#fff;color:#4f46e5}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.fb{margin-top:20px;background:rgba(255,255,255,.12);border-radius:16px;padding:16px;min-height:110px;font-size:20px}
+.score{font-size:40px;font-weight:800}
+.words{margin:10px 0;font-size:24px;font-weight:600}
+.g{color:#4ade80}
+.r{color:#f87171}
+.said{opacity:.8;font-size:16px}
+</style>
+</head>
+<body>
+<div class="top"><a class="logo" href="index.html">WordUp</a></div>
+<div class="box">
+  <h2>🎤 Pronunciation</h2>
+  <textarea id="txt">Learn English words, step by step.</textarea>
+  <div class="bar">
+    <select id="spd">
+      <option value="0.6">Slow</option>
+      <option value="0.85" selected>Normal</option>
+      <option value="1">Fast</option>
+    </select>
+    <button class="main" onclick="listen()">🔊 Listen</button>
+    <button id="mic" onclick="speakNow()">🎤 Speak</button>
+  </div>
+  <div class="fb" id="fb">1. Press Listen. 2. Press Speak and say the text. 3. See your score.</div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let voice = null;
+function pick() {
+  const v = speechSynthesis.getVoices().filter(x => x.lang.replace('_', '-') == 'en-US');
+  for (const n of ['Aaron', 'Alex', 'Tom', 'Fred', 'Evan', 'Nathan']) {
+    const f = v.find(x => x.name.includes(n));
+    if (f) { voice = f; return; }
+  }
+  voice = v[0] || null;
+}
+speechSynthesis.onvoiceschanged = pick; pick();
+
+function listen() {
+  const u = new SpeechSynthesisUtterance($('txt').value);
+  u.lang = 'en-US'; if (voice) u.voice = voice;
+  u.pitch = 0.6; u.rate = +$('spd').value;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+function norm(s) { return s.toLowerCase().replace(/[^a-z0-9' ]/g, ' ').split(/\s+/).filter(Boolean); }
+
+function speakNow() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { $('fb').textContent = 'Please open this page in Google Chrome.'; return; }
+  speechSynthesis.cancel();
+  const r = new SR();
+  r.lang = 'en-US'; r.interimResults = false; r.maxAlternatives = 1;
+  $('mic').textContent = '🎤 Listening...';
+  r.onresult = e => grade(e.results[0][0].transcript);
+  r.onerror = e => { $('fb').textContent = 'Microphone problem: ' + e.error + '. Allow the microphone and try again.'; };
+  r.onend = () => { $('mic').textContent = '🎤 Speak'; };
+  r.start();
+}
+
+function grade(said) {
+  const target = norm($('txt').value), got = norm(said);
+  const fb = $('fb'); fb.innerHTML = '';
+  let hit = 0;
+  const words = document.createElement('div'); words.className = 'words';
+  target.forEach(w => {
+    const ok = got.includes(w); if (ok) hit++;
+    const s = document.createElement('span'); s.className = ok ? 'g' : 'r'; s.textContent = w + ' ';
+    words.appendChild(s);
+  });
+  const pct = target.length ? Math.round(hit / target.length * 100) : 0;
+  const sc = document.createElement('div'); sc.className = 'score';
+  sc.textContent = (pct >= 90 ? '🎉 ' : pct >= 60 ? '👍 ' : '💪 ') + pct + '%';
+  const sd = document.createElement('div'); sd.className = 'said'; sd.textContent = 'I heard: ' + said;
+  fb.appendChild(sc); fb.appendChild(words); fb.appendChild(sd);
+}
+</script>
+</body>
+</html>

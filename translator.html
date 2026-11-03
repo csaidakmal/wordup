@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WordUp - Translator</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:'Poppins',sans-serif;color:#fff;background:#23262d;display:flex;flex-direction:column;align-items:center;padding:20px}
+.top{width:100%;max-width:640px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.logo{font-size:26px;font-weight:800;color:#fff;text-decoration:none}
+.box{width:100%;max-width:640px}
+h2{margin:0 0 16px;font-size:28px}
+.row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+select,textarea{font-family:inherit;font-size:16px;padding:10px 14px;border-radius:16px;border:none;flex:1}
+select{background:#fff;color:#4f46e5;font-weight:600}
+textarea{width:100%;height:120px;resize:vertical}
+button{font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;padding:10px 20px;border-radius:30px;border:2px solid #fff;background:transparent;color:#fff}
+button.main{background:#fff;color:#4f46e5}
+.out{margin-top:16px;min-height:120px;background:rgba(255,255,255,.12);border-radius:16px;padding:14px;font-size:20px;white-space:pre-wrap}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="top"><a class="logo" href="index.html">WordUp</a></div>
+<div class="box">
+  <h2>🌍 Translator</h2>
+  <div class="row">
+    <select id="from"></select>
+    <button onclick="swap()">⇄</button>
+    <select id="to"></select>
+  </div>
+  <textarea id="q" placeholder="Type a word or a sentence..."></textarea>
+  <div class="bar"><button class="main" onclick="doTr()">Translate</button></div>
+  <div class="out" id="out"></div>
+  <div class="bar">
+    <button id="bl" onclick="listen()" style="display:none">🔊 Listen</button>
+    <button id="bs" onclick="saveW()" style="display:none">+ Save to My words</button>
+  </div>
+</div>
+
+<script>
+const L = { 'English': 'en', 'Uzbek': 'uz', 'Russian': 'ru', 'Korean': 'ko', 'Turkish': 'tr', 'Arabic': 'ar', 'Chinese': 'zh-CN', 'Spanish': 'es', 'French': 'fr', 'German': 'de', 'Japanese': 'ja', 'Hindi': 'hi' };
+const $ = id => document.getElementById(id);
+let result = '';
+
+function fill(sel, auto) {
+  if (auto) { const o = document.createElement('option'); o.value = 'Autodetect'; o.textContent = 'Detect language'; sel.appendChild(o); }
+  Object.keys(L).forEach(k => { const o = document.createElement('option'); o.value = L[k]; o.textContent = k; sel.appendChild(o); });
+}
+fill($('from'), true); fill($('to'), false);
+$('from').value = 'en'; $('to').value = 'uz';
+
+let voice = null;
+function pick() {
+  const v = speechSynthesis.getVoices().filter(x => x.lang.replace('_', '-') == 'en-US');
+  for (const n of ['Aaron', 'Alex', 'Tom', 'Fred', 'Evan', 'Nathan']) {
+    const f = v.find(x => x.name.includes(n));
+    if (f) { voice = f; return; }
+  }
+  voice = v[0] || null;
+}
+speechSynthesis.onvoiceschanged = pick; pick();
+
+function swap() {
+  if ($('from').value == 'Autodetect') return;
+  const a = $('from').value; $('from').value = $('to').value; $('to').value = a;
+  const t = $('q').value; $('q').value = result || t; result = t; $('out').textContent = '';
+  $('bl').style.display = 'none'; $('bs').style.display = 'none';
+}
+
+function show(t) {
+  result = t; $('out').textContent = t;
+  const f = $('from').value, o = $('to').value;
+  $('bl').style.display = o == 'en' ? 'inline-block' : 'none';
+  $('bs').style.display = (o == 'en' || f == 'en') ? 'inline-block' : 'none';
+  $('bs').textContent = '+ Save to My words';
+}
+
+async function doTr() {
+  const q = $('q').value.trim(); if (!q) return;
+  const f = $('from').value, o = $('to').value;
+  if (f == o) { show(q); return; }
+  $('out').textContent = '...';
+  try {
+    const r = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(q) + '&langpair=' + f + '|' + o);
+    const j = await r.json();
+    const t = j.responseData && j.responseData.translatedText;
+    if (!t || j.responseStatus != 200) throw 0;
+    show(t);
+  } catch (e) { $('out').textContent = 'Could not translate. Check the internet and try again.'; }
+}
+
+function listen() {
+  const u = new SpeechSynthesisUtterance(result);
+  u.lang = 'en-US'; if (voice) u.voice = voice; u.pitch = 0.6; u.rate = 0.85;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+function saveW() {
+  const q = $('q').value.trim();
+  const en = $('to').value == 'en' ? result : q, other = $('to').value == 'en' ? q : result;
+  if (en.length > 40) { alert('Only short words or phrases can be saved.'); return; }
+  try {
+    const m = JSON.parse(localStorage.getItem('mine') || '[]');
+    m.push({ tr: other, en: en });
+    localStorage.setItem('mine', JSON.stringify(m));
+    $('bs').textContent = 'Saved ✅';
+  } catch (e) { alert('Could not save.'); }
+}
+</script>
+</body>
+</html>

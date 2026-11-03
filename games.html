@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WordUp - Games</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:'Poppins',sans-serif;color:#fff;background:#23262d;display:flex;flex-direction:column;align-items:center;padding:20px}
+.top{width:100%;max-width:760px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.logo{font-size:26px;font-weight:800;color:#fff;text-decoration:none}
+select,input{font-family:inherit;font-size:16px;padding:10px 14px;border-radius:20px;border:none}
+select{background:#fff;color:#4f46e5;font-weight:600}
+button{font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;padding:10px 20px;border-radius:30px;border:2px solid #fff;background:transparent;color:#fff}
+button.main{background:#fff;color:#4f46e5}
+.screen{display:none;width:100%;max-width:760px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:16px}
+.tile{position:relative;height:115px;border-radius:20px;padding:16px;display:flex;align-items:flex-end;font-size:24px;font-weight:800;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.3);overflow:hidden}
+.tile i{position:absolute;right:16px;top:10px;font-style:normal;font-size:56px;opacity:.65}
+.tile:hover{transform:translateY(-2px)}
+h2{margin:18px 0 0;font-size:28px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+.center{display:flex;flex-direction:column;align-items:center}
+.counter{opacity:.85;margin:14px 0}
+.gq{font-size:38px;font-weight:800;text-align:center;margin:10px 0 18px}
+.opts{display:grid;gap:10px;width:100%;max-width:420px}
+.opt{padding:14px;font-size:18px;border-radius:16px;text-align:center}
+.opt.right{background:#16a34a;border-color:#16a34a;color:#fff}
+.opt.wrong{background:#dc2626;border-color:#dc2626;color:#fff}
+.opt.sel{background:#fff;color:#4f46e5}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:520px}
+.col{display:grid;gap:10px;align-content:start}
+#sIn{width:100%;max-width:420px;text-align:center;font-size:22px;margin-bottom:12px}
+.ans{margin-top:10px;font-size:20px;font-weight:600;text-align:center}
+.emo{font-size:64px;height:84px;display:flex;align-items:center;justify-content:center}
+.rev{background:rgba(255,255,255,.12);border-radius:14px;padding:8px 14px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="top">
+  <a class="logo" href="index.html">WordUp</a>
+  <select id="lang">
+    <option value="uz">O'zbekcha</option>
+    <option value="ru">Русский</option>
+    <option value="ko">한국어</option>
+  </select>
+</div>
+
+<div class="screen" id="s1"><h2>Choose a game</h2><div class="grid" id="t1"></div></div>
+
+<div class="screen" id="s2">
+  <button onclick="home()">← Back</button>
+  <h2 id="h2"></h2>
+  <div class="grid" id="t2"></div>
+</div>
+
+<div class="screen" id="s3">
+  <button onclick="pickGame(game)">← Back</button>
+  <h2 id="h3"></h2>
+  <div class="grid" id="t3"></div>
+</div>
+
+<div class="screen" id="s4">
+  <div class="center">
+    <div class="bar"><button onclick="quit()">← Back</button></div>
+    <div class="counter" id="gcount"></div>
+    <div id="play" class="center" style="width:100%"></div>
+    <div class="emo" id="emo"></div>
+    <button class="main" id="gnext" onclick="gnext()" style="display:none">Next →</button>
+    <div id="gres" style="width:100%;max-width:420px"></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="data2.js"></script>
+<script src="data3.js"></script>
+<script src="data4.js"></script>
+<script src="data5.js"></script>
+<script src="data6.js"></script>
+<script src="data7.js"></script>
+<script src="data8.js"></script>
+<script src="data9.js"></script>
+<script src="data10.js"></script>
+<script src="data11.js"></script>
+<script src="data12.js"></script>
+
+<script>
+const WORDS = window.LIB || [];
+const cats = [...new Set(WORDS.map(x => x.cat)), 'My words'];
+const GAMES = ['Quiz', 'Match', 'Spell'];
+const GI = { Quiz: '🎯', Match: '🧩', Spell: '⌨️' };
+const G = ['#6a6cff,#a000ff', '#1bc0ff,#3b5bff', '#d4ff1a,#00d84a', '#ff9a3c,#ff2a2a'];
+const CI = { Daily: '💬', SAT: '🎓', IELTS: '🌍', 'My words': '✏️' };
+const SI = ['📘', '🔤', '🧮', '⭐', '🚀', '🎯', '🍎', '✈️'];
+const OK = ['🎉', '🔥', '😎', '👏', '💪', '🤩'];
+const NO = ['😅', '🙈', '🤔', '😬', '🫣'];
+let game = '', cat = '', sub = '', deck = [];
+let gq = [], gi = 0, score = 0, wrong = [], locked = false;
+const $ = id => document.getElementById(id);
+const rnd = a => a[Math.floor(Math.random() * a.length)];
+const mix = a => [...a].sort(() => Math.random() - 0.5);
+
+function go(n) { ['s1', 's2', 's3', 's4'].forEach((s, k) => $(s).style.display = (k == n - 1) ? 'block' : 'none'); }
+
+function tiles(el, items, icon, fn) {
+  el.innerHTML = '';
+  items.forEach((t, k) => {
+    const d = document.createElement('div');
+    d.className = 'tile';
+    d.style.background = 'linear-gradient(135deg,' + G[k % 4] + ')';
+    const ic = document.createElement('i'); ic.textContent = icon(t, k);
+    const s = document.createElement('span'); s.textContent = t;
+    d.appendChild(ic); d.appendChild(s);
+    d.onclick = () => fn(t);
+    el.appendChild(d);
+  });
+}
+
+function home() { tiles($('t1'), GAMES, g => GI[g], pickGame); go(1); }
+function pickGame(g) { game = g; tiles($('t2'), cats, c => CI[c] || '📚', pickCat); $('h2').textContent = g; go(2); }
+function pickCat(c) {
+  cat = c;
+  if (c == 'My words') { sub = ''; start(); return; }
+  tiles($('t3'), WORDS.filter(x => x.cat == c).map(x => x.sub), (t, k) => SI[k % 8], s => { sub = s; start(); });
+  $('h3').textContent = c; go(3);
+}
+function quit() { speechSynthesis.cancel(); if (cat == 'My words') pickGame(game); else go(3); }
+
+function mine() { try { return JSON.parse(localStorage.getItem('mine') || '[]'); } catch (e) { return []; } }
+
+function build() {
+  if (cat == 'My words') { deck = mine().map(w => ({ en: w.en, tr: w.tr, lv: '' })); return; }
+  const g = WORDS.find(x => x.cat == cat && x.sub == sub);
+  const col = { uz: 1, ru: 2, ko: 3 }[$('lang').value];
+  deck = g.words.map(r => { const p = r.split('|'); return { en: p[0], tr: p[col], lv: p[4] || '' }; });
+}
+
+/* Ovoz */
+let voice = null;
+function pick() {
+  const v = speechSynthesis.getVoices().filter(x => x.lang.replace('_', '-') == 'en-US');
+  for (const n of ['Aaron', 'Alex', 'Tom', 'Fred', 'Evan', 'Nathan']) {
+    const f = v.find(x => x.name.includes(n));
+    if (f) { voice = f; return; }
+  }
+  voice = v[0] || null;
+}
+speechSynthesis.onvoiceschanged = pick; pick();
+function say(t) {
+  const u = new SpeechSynthesisUtterance(t);
+  u.lang = 'en-US'; if (voice) u.voice = voice;
+  u.pitch = 0.6; u.rate = 0.85;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+/* Umumiy */
+function start() {
+  build();
+  if (deck.length < 4) { alert('You need at least 4 words to play.'); return; }
+  $('gres').innerHTML = ''; $('emo').textContent = ''; $('gnext').style.display = 'none';
+  go(4);
+  if (game == 'Match') { startMatch(); return; }
+  gq = mix(deck).slice(0, 10); gi = 0; score = 0; wrong = [];
+  game == 'Quiz' ? qshow() : sshow();
+}
+function counter() { $('gcount').textContent = (gi + 1) + ' / ' + gq.length + '   ⭐ ' + score; }
+function reveal(ok, q) {
+  $('emo').textContent = rnd(ok ? OK : NO);
+  if (!ok) wrong.push(q);
+  counter();
+  $('gnext').textContent = gi == gq.length - 1 ? 'Result' : 'Next →';
+  $('gnext').style.display = 'inline-block';
+}
+function gnext() {
+  if (gi == gq.length - 1) { finish(); return; }
+  gi++; $('emo').textContent = ''; $('gnext').style.display = 'none';
+  game == 'Quiz' ? qshow() : sshow();
+}
+function finish() {
+  $('gcount').textContent = 'Result'; $('play').innerHTML = ''; $('gnext').style.display = 'none';
+  const top = score >= gq.length * 0.8;
+  const h = document.createElement('div'); h.className = 'gq'; h.textContent = (top ? '🏆 ' : '👍 ') + score + ' / ' + gq.length;
+  $('play').appendChild(h);
+  $('emo').textContent = top ? '🎉' : '💪';
+  const r = $('gres'); r.innerHTML = '';
+  if (wrong.length) {
+    const t = document.createElement('div'); t.textContent = 'Review:'; r.appendChild(t);
+    wrong.forEach(w => { const d = document.createElement('div'); d.className = 'rev'; d.textContent = w.en + ' — ' + w.tr; r.appendChild(d); });
+  }
+  endButtons(r);
+}
+function endButtons(r) {
+  const bar = document.createElement('div'); bar.className = 'bar';
+  const a = document.createElement('button'); a.className = 'main'; a.textContent = 'Play again'; a.onclick = start;
+  const c = document.createElement('button'); c.textContent = 'Back'; c.onclick = quit;
+  bar.appendChild(a); bar.appendChild(c); r.appendChild(bar);
+}
+
+/* 1. Quiz */
+function qshow() {
+  locked = false; counter();
+  const q = gq[gi], P = $('play'); P.innerHTML = '';
+  const h = document.createElement('div'); h.className = 'gq'; h.textContent = q.en + (q.lv ? '  [' + q.lv + ']' : '');
+  const box = document.createElement('div'); box.className = 'opts';
+  mix([q, ...mix(deck.filter(w => w.tr != q.tr)).slice(0, 3)]).forEach(o => {
+    const b = document.createElement('button'); b.className = 'opt'; b.textContent = o.tr;
+    b.onclick = () => {
+      if (locked) return; locked = true;
+      [...box.children].forEach(x => { if (x.textContent == q.tr) x.classList.add('right'); });
+      const ok = o.tr == q.tr;
+      if (ok) score++; else b.classList.add('wrong');
+      reveal(ok, q);
+    };
+    box.appendChild(b);
+  });
+  P.appendChild(h); P.appendChild(box);
+  say(q.en);
+}
+
+/* 2. Match */
+function startMatch() {
+  const p = mix(deck).slice(0, 6); let sel = null, tries = 0, done = 0;
+  $('gcount').textContent = '0 / ' + p.length;
+  const P = $('play'); P.innerHTML = '';
+  const cols = document.createElement('div'); cols.className = 'cols';
+  function mk(key) {
+    const c = document.createElement('div'); c.className = 'col';
+    mix(p).forEach(w => {
+      const b = document.createElement('button'); b.className = 'opt'; b.textContent = w[key];
+      b.onclick = () => {
+        if (b.disabled) return;
+        if (!sel || sel.key == key) { if (sel) sel.b.classList.remove('sel'); sel = { b, w, key }; b.classList.add('sel'); return; }
+        tries++;
+        const a = sel.b; const ok = sel.w === w; sel.b.classList.remove('sel'); sel = null;
+        if (ok) {
+          a.classList.add('right'); b.classList.add('right'); a.disabled = true; b.disabled = true;
+          done++; $('gcount').textContent = done + ' / ' + p.length; $('emo').textContent = rnd(OK); say(w.en);
+          if (done == p.length) {
+            $('emo').textContent = '🏆';
+            const r = $('gres'); r.innerHTML = '';
+            const t = document.createElement('div'); t.className = 'gq'; t.textContent = 'Done in ' + tries + ' tries!'; r.appendChild(t);
+            endButtons(r);
+          }
+        } else {
+          a.classList.add('wrong'); b.classList.add('wrong'); $('emo').textContent = rnd(NO);
+          setTimeout(() => { a.classList.remove('wrong'); b.classList.remove('wrong'); }, 600);
+        }
+      };
+      c.appendChild(b);
+    });
+    return c;
+  }
+  cols.appendChild(mk('en')); cols.appendChild(mk('tr'));
+  P.appendChild(cols);
+}
+
+/* 3. Spell */
+function sshow() {
+  locked = false; counter();
+  const q = gq[gi], P = $('play'); P.innerHTML = '';
+  const h = document.createElement('div'); h.className = 'gq'; h.textContent = q.tr + (q.lv ? '  [' + q.lv + ']' : '');
+  const inp = document.createElement('input'); inp.id = 'sIn'; inp.placeholder = 'Type in English'; inp.autocomplete = 'off';
+  const ans = document.createElement('div'); ans.className = 'ans';
+  const chk = document.createElement('button'); chk.className = 'main'; chk.textContent = 'Check';
+  function check() {
+    if (locked) return; locked = true;
+    const ok = inp.value.trim().toLowerCase().replace(/\s+/g, ' ') == q.en.toLowerCase();
+    if (ok) score++;
+    ans.textContent = (ok ? '✅ ' : '❌ ') + q.en;
+    inp.disabled = true; chk.style.display = 'none';
+    say(q.en); reveal(ok, q);
+  }
+  chk.onclick = check;
+  inp.addEventListener('keydown', e => { if (e.key == 'Enter') check(); });
+  P.appendChild(h); P.appendChild(inp); P.appendChild(chk); P.appendChild(ans);
+  inp.focus();
+}
+
+home();
+</script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WordUp - Flashcards</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:'Poppins',sans-serif;color:#fff;background:#23262d;display:flex;flex-direction:column;align-items:center;padding:20px}
+.top{width:100%;max-width:760px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.logo{font-size:26px;font-weight:800;color:#fff;text-decoration:none}
+select,input{font-family:inherit;font-size:16px;padding:10px 14px;border-radius:20px;border:none}
+select{background:#fff;color:#4f46e5;font-weight:600}
+button{font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;padding:10px 20px;border-radius:30px;border:2px solid #fff;background:transparent;color:#fff}
+button.main{background:#fff;color:#4f46e5}
+.screen{display:none;width:100%;max-width:760px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:16px}
+.tile{position:relative;height:115px;border-radius:20px;padding:16px;display:flex;align-items:flex-end;font-size:24px;font-weight:800;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.3);overflow:hidden}
+.tile i{position:absolute;right:16px;top:10px;font-style:normal;font-size:56px;opacity:.65}
+.tile:hover{transform:translateY(-2px)}
+h2{margin:18px 0 0;font-size:28px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+.center{display:flex;flex-direction:column;align-items:center}
+.counter{opacity:.85;margin:14px 0}
+.scene{width:100%;max-width:420px;height:290px;perspective:1000px;cursor:pointer}
+.card{position:relative;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d}
+.card.flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;border-radius:24px;font-size:40px;font-weight:800;text-align:center;padding:20px}
+.front{background:#fff;color:#4f46e5}
+.back{background:#fbbf24;color:#1e1b4b;transform:rotateY(180deg);flex-direction:column}
+.badge{font-size:14px;background:#ede9fe;color:#6d28d9;border-radius:20px;padding:4px 12px;margin-left:12px}
+.lad{margin-top:14px;font-size:17px;font-weight:600;line-height:1.7;opacity:.85}
+.lad .cur{opacity:1;font-weight:800;background:rgba(255,255,255,.55);border-radius:10px;padding:0 12px}
+#mine{display:none;width:100%;max-width:420px;margin-top:26px}
+#mine input{width:100%;margin-bottom:10px}
+.row{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.12);border-radius:14px;padding:8px 14px;margin-top:8px}
+.row button{padding:2px 10px;font-size:14px}
+.gq{font-size:38px;font-weight:800;text-align:center;margin:10px 0 18px}
+.opts{display:grid;gap:10px;width:100%;max-width:420px}
+.opt{padding:14px;font-size:18px;border-radius:16px;text-align:center}
+.opt.right{background:#16a34a;border-color:#16a34a}
+.opt.wrong{background:#dc2626;border-color:#dc2626}
+.emo{font-size:64px;height:84px;display:flex;align-items:center;justify-content:center}
+.rev{background:rgba(255,255,255,.12);border-radius:14px;padding:8px 14px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="top">
+  <a class="logo" href="index.html">WordUp</a>
+  <select id="lang" onchange="if(cat)build()">
+    <option value="uz">O'zbekcha</option>
+    <option value="ru">Русский</option>
+    <option value="ko">한국어</option>
+  </select>
+</div>
+
+<div class="screen" id="s1"><h2>Choose a category</h2><div class="grid" id="t1"></div></div>
+
+<div class="screen" id="s2">
+  <button onclick="home()">← Back</button>
+  <h2 id="h2"></h2>
+  <div class="grid" id="t2"></div>
+</div>
+
+<div class="screen" id="s3">
+  <div class="center">
+    <div class="bar"><button onclick="back()">← Back</button><button class="main" onclick="startGame()">🎮 Game</button></div>
+    <div class="counter" id="counter"></div>
+    <div class="scene" onclick="flip()">
+      <div class="card" id="card">
+        <div class="face front" id="front"></div>
+        <div class="face back" id="back"></div>
+      </div>
+    </div>
+    <div class="bar">
+      <button onclick="move(-1)">←</button>
+      <button onclick="speak()">🔊 Listen</button>
+      <button class="main" onclick="move(1)">Next →</button>
+      <button onclick="shuffle()">🔀</button>
+    </div>
+    <div id="mine">
+      <input id="nTr" placeholder="Word in your language">
+      <input id="nEn" placeholder="English word">
+      <button class="main" onclick="addWord()">+ Add word</button>
+      <div id="list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="s4">
+  <div class="center">
+    <div class="bar"><button onclick="quit()">← Back</button></div>
+    <div class="counter" id="gcount"></div>
+    <div class="gq" id="gq"></div>
+    <div class="opts" id="opts"></div>
+    <div class="emo" id="emo"></div>
+    <button class="main" id="gnext" onclick="gnext()" style="display:none">Next →</button>
+    <div id="gres" style="width:100%;max-width:420px"></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="data2.js"></script>
+<script src="data3.js"></script>
+<script src="data4.js"></script>
+<script src="data5.js"></script>
+<script src="data6.js"></script>
+<script src="data7.js"></script>
+<script src="data8.js"></script>
+<script src="data9.js"></script>
+<script src="data10.js"></script>
+<script src="data11.js"></script>
+<script src="data12.js"></script>
+
+<script>
+const WORDS = window.LIB || [];
+const cats = [...new Set(WORDS.map(x => x.cat)), 'My words'];
+const G = ['#6a6cff,#a000ff', '#1bc0ff,#3b5bff', '#d4ff1a,#00d84a', '#ff9a3c,#ff2a2a'];
+const CI = { Daily: '💬', SAT: '🎓', IELTS: '🌍', 'My words': '✏️' };
+const SI = ['📘', '🔤', '🧮', '⭐', '🚀', '🎯', '🍎', '✈️'];
+const OK = ['🎉', '🔥', '😎', '👏', '💪', '🤩'];
+const NO = ['😅', '🙈', '🤔', '😬', '🫣'];
+let cat = '', sub = '', deck = [], i = 0;
+let gq = [], gi = 0, score = 0, wrong = [], locked = false;
+const $ = id => document.getElementById(id);
+const rnd = a => a[Math.floor(Math.random() * a.length)];
+const mix = a => [...a].sort(() => Math.random() - 0.5);
+
+function go(n) { ['s1', 's2', 's3', 's4'].forEach((s, k) => $(s).style.display = (k == n - 1) ? 'block' : 'none'); }
+
+function tiles(el, items, icon, fn) {
+  el.innerHTML = '';
+  items.forEach((t, k) => {
+    const d = document.createElement('div');
+    d.className = 'tile';
+    d.style.background = 'linear-gradient(135deg,' + G[k % 4] + ')';
+    const ic = document.createElement('i'); ic.textContent = icon(t, k);
+    const s = document.createElement('span'); s.textContent = t;
+    d.appendChild(ic); d.appendChild(s);
+    d.onclick = () => fn(t);
+    el.appendChild(d);
+  });
+}
+
+function home() { cat = ''; tiles($('t1'), cats, c => CI[c] || '📚', openCat); go(1); }
+function openCat(c) {
+  cat = c;
+  if (c == 'My words') { sub = ''; build(); go(3); return; }
+  tiles($('t2'), WORDS.filter(x => x.cat == c).map(x => x.sub), (t, k) => SI[k % 8], s => { sub = s; build(); go(3); });
+  $('h2').textContent = c;
+  go(2);
+}
+function back() { if (cat == 'My words') home(); else go(2); }
+
+function mine() { try { return JSON.parse(localStorage.getItem('mine') || '[]'); } catch (e) { return []; } }
+function save(m) { try { localStorage.setItem('mine', JSON.stringify(m)); } catch (e) {} }
+
+function build() {
+  if (cat == 'My words') {
+    deck = mine().map(w => ({ en: w.en, tr: w.tr }));
+  } else {
+    const g = WORDS.find(x => x.cat == cat && x.sub == sub);
+    const col = { uz: 1, ru: 2, ko: 3 }[$('lang').value];
+    deck = g.words.map(r => { const p = r.split('|'); return { en: p[0], tr: p[col], lv: p[4] || '', lad: p[5] || '' }; });
+  }
+  i = 0; show();
+}
+
+function show() {
+  $('card').classList.remove('flipped');
+  const w = deck[i], f = $('front'), b = $('back');
+  f.textContent = w ? w.en : 'No words yet';
+  if (w && w.lv) { const s = document.createElement('span'); s.className = 'badge'; s.textContent = w.lv; f.appendChild(s); }
+  b.textContent = w ? w.tr : 'Add your first word below';
+  if (w && w.lad) {
+    const d = document.createElement('div'); d.className = 'lad';
+    w.lad.split('>').forEach(x => {
+      const p = x.split(':'), s = document.createElement('div');
+      s.textContent = p[1] + '  ' + p[0];
+      if (p[0] == w.en) s.className = 'cur';
+      d.appendChild(s);
+    });
+    b.appendChild(d);
+  }
+  $('counter').textContent = deck.length ? (i + 1) + ' / ' + deck.length : '0 / 0';
+  $('mine').style.display = cat == 'My words' ? 'block' : 'none';
+  if (cat == 'My words') list();
+}
+
+function flip() { $('card').classList.toggle('flipped'); }
+function move(d) { if (!deck.length) return; i = (i + d + deck.length) % deck.length; show(); }
+function shuffle() {
+  for (let a = deck.length - 1; a > 0; a--) { const b = Math.floor(Math.random() * (a + 1)); [deck[a], deck[b]] = [deck[b], deck[a]]; }
+  i = 0; show();
+}
+
+function addWord() {
+  const tr = $('nTr').value.trim(), en = $('nEn').value.trim();
+  if (!tr || !en) return;
+  const m = mine(); m.push({ tr, en }); save(m);
+  $('nTr').value = ''; $('nEn').value = '';
+  build(); i = deck.length - 1; show();
+}
+function list() {
+  const l = $('list'); l.innerHTML = '';
+  mine().forEach((w, k) => {
+    const d = document.createElement('div'); d.className = 'row';
+    d.textContent = w.en + ' — ' + w.tr;
+    const b = document.createElement('button'); b.textContent = '✕';
+    b.onclick = () => { const m = mine(); m.splice(k, 1); save(m); build(); };
+    d.appendChild(b); l.appendChild(d);
+  });
+}
+
+/* Ovoz */
+let voice = null;
+function pick() {
+  const v = speechSynthesis.getVoices().filter(x => x.lang.replace('_', '-') == 'en-US');
+  for (const n of ['Aaron', 'Alex', 'Tom', 'Fred', 'Evan', 'Nathan']) {
+    const f = v.find(x => x.name.includes(n));
+    if (f) { voice = f; return; }
+  }
+  voice = v[0] || null;
+}
+speechSynthesis.onvoiceschanged = pick; pick();
+
+function say(t) {
+  const u = new SpeechSynthesisUtterance(t);
+  u.lang = 'en-US'; if (voice) u.voice = voice;
+  u.pitch = 0.6; u.rate = 0.85;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+function speak() { if (deck[i]) say(deck[i].en); }
+
+/* O'yin */
+function startGame() {
+  if (deck.length < 4) { alert('You need at least 4 words to play.'); return; }
+  gq = mix(deck).slice(0, 10); gi = 0; score = 0; wrong = [];
+  go(4); gshow();
+}
+function gshow() {
+  locked = false;
+  $('gres').innerHTML = ''; $('emo').textContent = ''; $('gnext').style.display = 'none';
+  const q = gq[gi];
+  $('gcount').textContent = (gi + 1) + ' / ' + gq.length + '   ⭐ ' + score;
+  $('gq').textContent = q.en + (q.lv ? '  [' + q.lv + ']' : '');
+  const others = mix(deck.filter(w => w.tr != q.tr)).slice(0, 3);
+  $('opts').innerHTML = '';
+  mix([q, ...others]).forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'opt'; b.textContent = o.tr;
+    b.onclick = () => answer(b, o, q);
+    $('opts').appendChild(b);
+  });
+  say(q.en);
+}
+function answer(b, o, q) {
+  if (locked) return; locked = true;
+  [...$('opts').children].forEach(x => { if (x.textContent == q.tr) x.classList.add('right'); });
+  if (o.tr == q.tr) { score++; $('emo').textContent = rnd(OK); }
+  else { b.classList.add('wrong'); wrong.push(q); $('emo').textContent = rnd(NO); }
+  $('gcount').textContent = (gi + 1) + ' / ' + gq.length + '   ⭐ ' + score;
+  $('gnext').textContent = gi == gq.length - 1 ? 'Result' : 'Next →';
+  $('gnext').style.display = 'inline-block';
+}
+function gnext() { if (gi == gq.length - 1) { finish(); return; } gi++; gshow(); }
+function finish() {
+  $('gcount').textContent = 'Result'; $('opts').innerHTML = ''; $('gnext').style.display = 'none';
+  $('gq').textContent = (score >= gq.length * 0.8 ? '🏆 ' : '👍 ') + score + ' / ' + gq.length;
+  $('emo').textContent = score >= gq.length * 0.8 ? '🎉' : '💪';
+  const r = $('gres'); r.innerHTML = '';
+  if (wrong.length) {
+    const h = document.createElement('div'); h.textContent = 'Review:'; h.style.marginTop = '10px'; r.appendChild(h);
+    wrong.forEach(w => { const d = document.createElement('div'); d.className = 'rev'; d.textContent = w.en + ' — ' + w.tr; r.appendChild(d); });
+  }
+  const bar = document.createElement('div'); bar.className = 'bar';
+  const a = document.createElement('button'); a.className = 'main'; a.textContent = 'Play again'; a.onclick = startGame;
+  const c = document.createElement('button'); c.textContent = 'Back'; c.onclick = quit;
+  bar.appendChild(a); bar.appendChild(c); r.appendChild(bar);
+}
+function quit() { speechSynthesis.cancel(); go(3); }
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName == 'INPUT' || $('s3').style.display != 'block') return;
+  if (e.key == 'ArrowRight') move(1);
+  if (e.key == 'ArrowLeft') move(-1);
+  if (e.key == ' ') { e.preventDefault(); flip(); }
+});
+
+home();
+</script>
+</body>
+</html>

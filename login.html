@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WordUp - Log in</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:'Poppins',sans-serif;color:#fff;background:linear-gradient(135deg,#1e1b4b,#4f46e5 50%,#9333ea);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.logo{font-size:36px;font-weight:800;color:#fff;text-decoration:none;margin-bottom:20px}
+.box{width:100%;max-width:380px;background:#fff;color:#1e1b4b;border-radius:20px;padding:26px}
+.tabs{display:flex;gap:8px;margin-bottom:18px}
+.tabs button{flex:1;padding:10px;border:none;border-radius:30px;background:#eee;color:#444;font-family:inherit;font-size:16px;font-weight:600;cursor:pointer}
+.tabs button.on{background:#4f46e5;color:#fff}
+input{width:100%;padding:12px;margin-bottom:12px;border:1px solid #ccc;border-radius:10px;font-size:16px;font-family:inherit}
+.go{width:100%;padding:12px;background:#4f46e5;color:#fff;border:none;border-radius:30px;font-size:17px;font-weight:600;font-family:inherit;cursor:pointer}
+.msg{margin-top:12px;font-size:14px;text-align:center;color:#dc2626;min-height:20px}
+</style>
+</head>
+<body>
+<a class="logo" href="index.html">WordUp</a>
+<div class="box">
+  <div class="tabs">
+    <button id="tl" class="on">Log in</button>
+    <button id="ts">Sign up</button>
+  </div>
+  <input id="email" type="email" placeholder="Email" autocomplete="email">
+  <input id="pass" type="password" placeholder="Password (at least 6 characters)" autocomplete="current-password">
+  <button class="go" id="go">Log in</button>
+  <div class="msg" id="msg"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyAV6qkvP5q93qVIeV08S0thfQBvTaHpdSM",
+  authDomain: "wordup-4d379.firebaseapp.com",
+  projectId: "wordup-4d379",
+  storageBucket: "wordup-4d379.firebasestorage.app",
+  messagingSenderId: "455344744711",
+  appId: "1:455344744711:web:d34a93ccb5e572d708fda2"
+});
+const auth = getAuth(app);
+const $ = id => document.getElementById(id);
+let mode = 'login';
+
+onAuthStateChanged(auth, u => { if (u) location.href = 'menu.html'; });
+
+function setMode(m) {
+  mode = m;
+  $('tl').className = m == 'login' ? 'on' : '';
+  $('ts').className = m == 'signup' ? 'on' : '';
+  $('go').textContent = m == 'login' ? 'Log in' : 'Create account';
+  $('msg').textContent = '';
+}
+$('tl').onclick = () => setMode('login');
+$('ts').onclick = () => setMode('signup');
+
+const ERR = {
+  'auth/invalid-email': 'This email address is not valid.',
+  'auth/email-already-in-use': 'This email is already registered. Try Log in.',
+  'auth/weak-password': 'Password must be at least 6 characters.',
+  'auth/invalid-credential': 'Wrong email or password.',
+  'auth/missing-password': 'Please enter a password.',
+  'auth/too-many-requests': 'Too many tries. Please wait a few minutes.',
+  'auth/network-request-failed': 'No internet connection.',
+  'auth/operation-not-supported-in-this-environment': 'Open this page from the local server (http://localhost:8000), not from the file.'
+};
+
+async function submit() {
+  const email = $('email').value.trim(), pass = $('pass').value;
+  $('msg').textContent = '...';
+  try {
+    if (mode == 'signup') await createUserWithEmailAndPassword(auth, email, pass);
+    else await signInWithEmailAndPassword(auth, email, pass);
+  } catch (e) {
+    $('msg').textContent = ERR[e.code] || ('Error: ' + e.code);
+  }
+}
+$('go').onclick = submit;
+$('pass').addEventListener('keydown', e => { if (e.key == 'Enter') submit(); });
+</script>
+</body>
+</html>

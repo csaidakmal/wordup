@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WordUp</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
+  color: white;
+  background: linear-gradient(135deg, #1e1b4b, #4f46e5 50%, #9333ea);
+  overflow-x: hidden;
+}
+.floating { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+.floating span {
+  position: absolute;
+  bottom: -60px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.15);
+  animation: floatUp linear infinite;
+}
+@keyframes floatUp { to { transform: translateY(-120vh) rotate(10deg); } }
+
+nav {
+  position: relative; z-index: 1;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 40px;
+}
+.logo { font-size: 28px; font-weight: 800; }
+.nav-buttons a { margin-left: 10px; }
+
+.btn-outline, .btn-solid, .btn-big {
+  display: inline-block; text-decoration: none; font-weight: 600; border-radius: 30px;
+}
+.btn-outline { background: transparent; color: white; border: 2px solid white; padding: 10px 24px; font-size: 16px; }
+.btn-solid { background: white; color: #4f46e5; border: 2px solid white; padding: 10px 24px; font-size: 16px; }
+.btn-big { background: white; color: #4f46e5; padding: 16px 40px; font-size: 20px; margin-top: 30px; }
+
+.hero { position: relative; z-index: 1; text-align: center; padding: 80px 20px 40px; }
+.hero h1 { font-size: clamp(40px, 8vw, 80px); font-weight: 800; margin: 0; line-height: 1.1; }
+.hero p { font-size: clamp(18px, 3vw, 26px); margin: 20px auto 0; max-width: 650px; opacity: 0.9; }
+
+.cards {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px; max-width: 1000px; margin: 40px auto; padding: 0 20px 60px;
+}
+.card {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 20px; padding: 28px; text-align: center;
+}
+.card .icon { font-size: 40px; }
+.card h3 { margin: 10px 0 6px; }
+.card p { margin: 0; opacity: 0.85; font-size: 15px; }
+</style>
+</head>
+<body>
+<div class="floating"></div>
+
+<nav>
+  <div class="logo">WordUp</div>
+  <div class="nav-buttons">
+    <a class="btn-outline" href="login.html">Log in</a>
+    <a class="btn-solid" href="login.html">Sign up</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <h1>Learn English words, step by step.</h1>
+  <p>Flashcards, word games, translator and pronunciation, all in one place. Free for everyone in the world.</p>
+  <a class="btn-big" href="login.html">Get started</a>
+</section>
+
+<section class="cards">
+  <div class="card"><div class="icon">🃏</div><h3>Flashcards</h3><p>Remember new words faster.</p></div>
+  <div class="card"><div class="icon">🎮</div><h3>Word games</h3><p>Learn while you play.</p></div>
+  <div class="card"><div class="icon">🌍</div><h3>Translator</h3><p>Any language to English.</p></div>
+  <div class="card"><div class="icon">🎤</div><h3>Pronunciation</h3><p>Speak like a native.</p></div>
+</section>
+
+<script>
+const words = ['hello', 'apple', 'travel', 'friend', 'school', 'music', 'dream', 'future', 'success', 'learn', 'speak', 'world', 'book', 'happy', 'water', 'city'];
+const box = document.querySelector('.floating');
+for (let i = 0; i < 22; i++) {
+  const s = document.createElement('span');
+  s.textContent = words[i % words.length];
+  s.style.left = Math.random() * 90 + '%';
+  s.style.fontSize = (16 + Math.random() * 28) + 'px';
+  s.style.animationDuration = (12 + Math.random() * 18) + 's';
+  s.style.animationDelay = (-Math.random() * 20) + 's';
+  box.appendChild(s);
+}
+</script>
+</body>
+</html>

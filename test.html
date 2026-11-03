@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family:sans-serif;font-size:24px;padding:30px">
+<script>
+window.onerror = function (m, s, l) {
+  document.body.append('XATO: ' + m + ' (qator ' + l + ')');
+};
+</script>
+<script src="data.js"></script>
+<script>
+document.body.append(window.LIB ? 'data.js ishladi, bloklar soni: ' + LIB.length : 'data.js o\'qilmadi');
+</script>
+</body>
+</html>
